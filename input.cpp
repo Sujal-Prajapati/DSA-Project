@@ -1,11 +1,20 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
-#include <string>
 #include <sstream>
-#include <algorithm>
+#include <vector>
+#include <map>
+#include <set>
+#include <string>
 
 using namespace std;
+
+struct Slots {
+    string startTime;
+    string endTime;
+
+    Slots(const string& start, const string& end)
+        : startTime(start), endTime(end) {}
+};
 
 int main() {
     ifstream file("temp.csv");
@@ -15,79 +24,68 @@ int main() {
         return 1;
     }
 
-    vector<string> names;
-    vector<vector<vector<string>>> times;
-    vector<vector<string>> seriesNames;
+    map<string, map<string, vector<Slots>>> timeslots;
+    map<string, set<string>> favoriteSeries;
 
     string line;
+    getline(file, line); 
 
     while (getline(file, line)) {
-        stringstream ss(line);
-        vector<string> data;
+        istringstream ss(line);
+        vector<string> parts;
         string str;
 
         while (getline(ss, str, ',')) {
-            if (!str.empty() && str.front() == '"' && str.back() == '"') {
-                str = str.substr(1, str.size() - 2);
-            }
-            data.push_back(str);
+            parts.push_back(str);
         }
 
-        if (data.size() < 9) { // Assuming we need at least 9 values in each line
+        if (parts.size() < 9) {
             cerr << "Invalid line: " << line << endl;
             continue;
         }
 
-        names.push_back(data[0]);
-        
-        vector<vector<string>> day_time;
-        vector<string> slots;
-        string s;
+        string name = parts[0];
+
         for (int i = 1; i <= 7; ++i) {
-            stringstream timeSS(data[i]);
-            while (getline(timeSS, s, ' ')) {
-                slots.push_back(s);
+            string day = "Day" + to_string(i);
+            istringstream SS(parts[i]);
+            string timeSlot;
+
+            while (getline(SS, timeSlot, ';')) {
+                istringstream slot(timeSlot);
+                string startTime, endTime;
+
+                getline(slot, startTime, '-');
+                getline(slot, endTime, '-');
+                
+                timeslots[name][day].emplace_back(startTime, endTime);
             }
-            day_time.push_back(slots);
-            slots.clear();
         }
-        times.push_back(day_time);
 
-        vector<string> series;
-        for (int i = 8; i < data.size(); ++i) {
-            series.push_back(data[i]);
+        istringstream seriesSS(parts[8]);
+        string series;
+
+        while (getline(seriesSS, series, ';')) {
+            favoriteSeries[name].insert(series);
         }
-        seriesNames.push_back(series);
     }
-
     file.close();
 
-
-    for (int i = 0; i < names.size(); ++i) {
-        for (int j = i + 1; j < names.size(); ++j) {
-            int res = times[i][0][0].compare(times[j][0][0]);
-            if(res > 0){
-                swap(times[i], times[j]);
-                swap(names[i], names[j]);
-                swap(seriesNames[i], seriesNames[j]);
+    for (const auto& family : timeslots) {
+        cout << "Member: " << family.first << endl;
+        cout << "Time Slots:" << endl;
+        for (const auto& daySchedule : family.second) {
+            cout << "Day: " << daySchedule.first << endl;
+            for (const auto& timeSlot : daySchedule.second) {
+                cout << "  " << timeSlot.startTime << " - " << timeSlot.endTime << endl;
             }
         }
-    }
 
-
-    for (int i = 0; i < 7; ++i) {
-        cout << "Day " << i + 1 << ":\n";
-        for (int j = 0; j < names.size(); ++j) {
-            cout << "Name: " << names[j] << endl;
-            cout << "  Time Slot: ";
-            for (int k = 0; k < times[j][i].size(); ++k) {
-                cout<<times[j][i][k]<<" ";
-                
-            }
-            cout << endl;
+        cout << "Series: ";
+        for (const auto& series : favoriteSeries[family.first]) {
+            cout << series << " ";
         }
-        cout << endl;
+        cout << endl << endl;
     }
-
     return 0;
 }
