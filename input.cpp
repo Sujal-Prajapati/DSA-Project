@@ -8,37 +8,40 @@
 
 using namespace std;
 
-struct Slots {
+struct TimeSlot {
     string startTime;
     string endTime;
 
-    Slots(const string& start, const string& end)
+    TimeSlot(const string& start, const string& end)
         : startTime(start), endTime(end) {}
 };
 
+vector<string> split(const string &s, char delimiter) {
+    vector<string> tokens;
+    stringstream ss(s);
+    string token;
+    while (getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
 int main() {
-    ifstream file("temp.csv");
+    ifstream file("name2.csv");
 
     if (!file.is_open()) {
         cerr << "Error opening file." << endl;
         return 1;
     }
 
-    map<string, map<string, vector<Slots>>> timeslots;
+    map<string, map<string, vector<TimeSlot>>> timeslots;
     map<string, set<string>> favoriteSeries;
 
     string line;
-    getline(file, line); 
+    getline(file, line);  // Skip header
 
     while (getline(file, line)) {
-        istringstream ss(line);
-        vector<string> parts;
-        string str;
-
-        while (getline(ss, str, ',')) {
-            parts.push_back(str);
-        }
-
+        vector<string> parts = split(line, ',');
         if (parts.size() < 9) {
             cerr << "Invalid line: " << line << endl;
             continue;
@@ -48,31 +51,28 @@ int main() {
 
         for (int i = 1; i <= 7; ++i) {
             string day = "Day" + to_string(i);
-            istringstream SS(parts[i]);
-            string timeSlot;
+            vector<string> timeSlots = split(parts[i], ';');
 
-            while (getline(SS, timeSlot, ';')) {
-                istringstream slot(timeSlot);
-                string startTime, endTime;
-
-                getline(slot, startTime, '-');
-                getline(slot, endTime, '-');
-                
-                timeslots[name][day].emplace_back(startTime, endTime);
+            for(const string& slot : timeSlots) {
+                vector<string> slotParts = split(slot, '-');
+                if (slotParts.size() != 2) {
+                    cerr << "Invalid time slot: " << slot << endl;
+                    continue;
+                }
+                timeslots[name][day].emplace_back(slotParts[0], slotParts[1]);
             }
         }
 
-        istringstream seriesSS(parts[8]);
-        string series;
-
-        while (getline(seriesSS, series, ';')) {
-            favoriteSeries[name].insert(series);
-        }
+        vector<string> list = split(parts[8], ';');
+        set<string> seriesSet(list.begin(), list.end());
+        favoriteSeries[name] = seriesSet;
     }
+
     file.close();
 
     for (const auto& family : timeslots) {
         cout << "Member: " << family.first << endl;
+
         cout << "Time Slots:" << endl;
         for (const auto& daySchedule : family.second) {
             cout << "Day: " << daySchedule.first << endl;
@@ -87,5 +87,6 @@ int main() {
         }
         cout << endl << endl;
     }
+
     return 0;
 }
