@@ -20,23 +20,50 @@ string trim(const string& str) {
 }
 
 vector<string> split(const string& s, char delimiter) {
-    vector<string> tokens;
+    vector<string> vect;
     stringstream ss(s);
     string token;
     while (getline(ss, token, delimiter)) {
-        tokens.push_back(trim(token));
+        vect.push_back(trim(token));
     }
-    return tokens;
+    return vect;
 }
 
 struct TimeSlot {
-    string start;
-    string end;
+    string startTime;
+    string endTime;
 
-    TimeSlot(const string& s, const string& e)
-        : start(s), end(e) {}
+    TimeSlot(const string& start, const string& end) : startTime(trim(start)), endTime(trim(end)) {}
 
     bool operator==(const TimeSlot& other) const {
-        return (start == other.start) && (end == other.end);
+        return (startTime == other.startTime) && (endTime == other.endTime);
     }
 };
+
+//Finding common series
+set<string> findCommonFavoriteSeries(const string& p1, const string& p2,const map<string, map<string, vector<TimeSlot>>>& schedule,const map<string, set<string>>& series,map<string, string>& lastSeries) {
+    set<string> common;
+    for (unsigned int i = 1; i <= 7; ++i) {
+        string day = "Day" + to_string(i);
+        const vector<TimeSlot>& slots1 = schedule.at(p1).at(day);
+        const vector<TimeSlot>& slots2 = schedule.at(p2).at(day);
+
+        for (const auto& t1 : slots1) {
+            for (const auto& t2 : slots2) {
+                if (t1 == t2) {                                             // Time slots are same or not
+                    const set<string>& series1 = series.at(p1);
+                    const set<string>& series2 = series.at(p2);
+
+                    set<string> s;                                          // Storing comman series
+                    set_intersection(series1.begin(), series1.end(),series2.begin(), series2.end(),inserter(s, s.begin()));
+
+                    // Add common series to the set
+                    for(const auto& series : s) {
+                        common.insert(series);
+                    }
+                }
+            }
+        }
+    }
+    return common;                                                          //Returning common series
+}
