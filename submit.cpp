@@ -10,7 +10,6 @@
 
 using namespace std;
 
-// Function to trim whitespace from the beginning and end of a string
 string trim(const string& str) {
     size_t first = str.find_first_not_of(' ');
     if (string::npos == first) {
@@ -20,7 +19,6 @@ string trim(const string& str) {
     return str.substr(first, (last - first + 1));
 }
 
-// Function to split a string by a delimiter and return a vector of tokens
 vector<string> split(const string& s, char delimiter) {
     vector<string> tokens;
     stringstream ss(s);
@@ -31,15 +29,14 @@ vector<string> split(const string& s, char delimiter) {
     return tokens;
 }
 
-// Struct to represent a time slot
 struct TimeSlot {
-    string startTime;
-    string endTime;
+    string start;
+    string end;
 
-    TimeSlot(const string& start, const string& end)
-        : startTime(start), endTime(end) {}
+    TimeSlot(const string& s, const string& e)
+        : start(s), end(e) {}
 
     bool operator==(const TimeSlot& other) const {
-        return (startTime == other.startTime) && (endTime == other.endTime);
+        return (start == other.start) && (end == other.end);
     }
 };
