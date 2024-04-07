@@ -144,8 +144,11 @@ int main() {
     for (unsigned int i = 1; i <= 7; ++i) {
         string day = "Day" + to_string(i);
         cout << "Schedule for " << day << ":\n";
-        cout << setw(15) << "Time Slot" << setw(30) << "Family Members" << setw(30) << "Common Series" << endl;
-
+        cout << setfill('-') << setw(18) << "-"<< endl;
+        cout << setfill('-') << setw(100) << "-"<< endl;
+        cout << "Time Slot\t\t\tFamily Members\t\t\t\t\tSeries\n";
+        cout << setfill('-') << setw(100) << "-"<< endl;
+        
         map<string, set<string>> slotsForDay;
         for (const auto& member : schedule) {
             const map<string, vector<TimeSlot>>& dailySchedule = member.second;
@@ -156,10 +159,10 @@ int main() {
         }
 
         for (const auto& slotInfo : slotsForDay) {
-            const string& timeSlot = slotInfo.first;
+            const string& slot = slotInfo.first;
             const set<string>& members = slotInfo.second;
 
-            cout << setw(15) << timeSlot << setw(30);
+            cout << slot << "\t\t\t";
             bool first = true;
             for (const auto& member : members) {
                 if (!first) {
@@ -168,7 +171,7 @@ int main() {
                 print(member, "1;36");
                 first = false;
             }
-            cout << setw(30);
+            cout << "\t\t\t\t\t";
 
             if (members.size() >= 2) {
                 auto it = members.begin();
@@ -190,14 +193,15 @@ int main() {
             } else if (members.size() == 1) {
                 const string& person = *(members.begin());
                 const set<string>& seriesSet = favorites[person];
+                cout<<"\t";
                 print(getNext(person, seriesSet, lastSeries, lastIndex), "1;32");
             } else {
                 print("N/A", "1;33");
-            }
+            } 
             cout << endl;
         }
 
-        cout << endl;
+        cout << setfill('-') << setw(100) << "-"<< endl<<endl;
     }
 
     return 0;
