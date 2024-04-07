@@ -67,3 +67,19 @@ set<string> findCommonFavoriteSeries(const string& p1, const string& p2,const ma
     }
     return common;                                                          //Returning common series
 }
+string getNext(const string& person, const set<string>& seriesSet, map<string, string>& last,
+               map<string, int>& lastIndex) {
+    auto it = seriesSet.begin();
+    int lastIdx = lastIndex[person];
+    if (lastIdx == seriesSet.size() - 1) {
+        lastIndex[person] = 0;
+        return *it;
+    }
+    advance(it, lastIdx + 1);
+    lastIndex[person] = lastIdx + 1;
+    return *it;
+}
+
+void print(const string& text, const string& color) {
+    cout << "\033[" << color << "m" << text << "\033[0m";
+}
