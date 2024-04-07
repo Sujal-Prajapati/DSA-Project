@@ -1,92 +1,91 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
-#include <string>
 #include <sstream>
-#include <algorithm>
+#include <vector>
+#include <map>
+#include <set>
+#include <string>
 
 using namespace std;
 
+struct TimeSlot {
+    string startTime;
+    string endTime;
+
+    TimeSlot(const string& start, const string& end)
+        : startTime(start), endTime(end) {}
+};
+
+vector<string> split(const string &s, char delimiter) {
+    vector<string> tokens;
+    stringstream ss(s);
+    string token;
+    while (getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
 int main() {
-    ifstream file("temp.csv");
+    ifstream file("name2.csv");
 
     if (!file.is_open()) {
         cerr << "Error opening file." << endl;
         return 1;
     }
 
-    vector<string> names;
-    vector<vector<vector<string>>> times;
-    vector<vector<string>> seriesNames;
+    map<string, map<string, vector<TimeSlot>>> timeslots;
+    map<string, set<string>> favoriteSeries;
 
     string line;
+    getline(file, line);  // Skip header
 
     while (getline(file, line)) {
-        stringstream ss(line);
-        vector<string> data;
-        string str;
-
-        while (getline(ss, str, ',')) {
-            if (!str.empty() && str.front() == '"' && str.back() == '"') {
-                str = str.substr(1, str.size() - 2);
-            }
-            data.push_back(str);
-        }
-
-        if (data.size() < 9) { // Assuming we need at least 9 values in each line
+        vector<string> parts = split(line, ',');
+        if (parts.size() < 9) {
             cerr << "Invalid line: " << line << endl;
             continue;
         }
 
-        names.push_back(data[0]);
-        
-        vector<vector<string>> day_time;
-        vector<string> slots;
-        string s;
-        for (int i = 1; i <= 7; ++i) {
-            stringstream timeSS(data[i]);
-            while (getline(timeSS, s, ' ')) {
-                slots.push_back(s);
-            }
-            day_time.push_back(slots);
-            slots.clear();
-        }
-        times.push_back(day_time);
+        string name = parts[0];
 
-        vector<string> series;
-        for (int i = 8; i < data.size(); ++i) {
-            series.push_back(data[i]);
+        for (int i = 1; i <= 7; ++i) {
+            string day = "Day" + to_string(i);
+            vector<string> timeSlots = split(parts[i], ';');
+
+            for(const string& slot : timeSlots) {
+                vector<string> slotParts = split(slot, '-');
+                if (slotParts.size() != 2) {
+                    cerr << "Invalid time slot: " << slot << endl;
+                    continue;
+                }
+                timeslots[name][day].emplace_back(slotParts[0], slotParts[1]);
+            }
         }
-        seriesNames.push_back(series);
+
+        vector<string> list = split(parts[8], ';');
+        set<string> seriesSet(list.begin(), list.end());
+        favoriteSeries[name] = seriesSet;
     }
 
     file.close();
 
+    for (const auto& family : timeslots) {
+        cout << "Member: " << family.first << endl;
 
-    for (int i = 0; i < names.size(); ++i) {
-        for (int j = i + 1; j < names.size(); ++j) {
-            int res = times[i][0][0].compare(times[j][0][0]);
-            if(res > 0){
-                swap(times[i], times[j]);
-                swap(names[i], names[j]);
-                swap(seriesNames[i], seriesNames[j]);
+        cout << "Time Slots:" << endl;
+        for (const auto& daySchedule : family.second) {
+            cout << "Day: " << daySchedule.first << endl;
+            for (const auto& timeSlot : daySchedule.second) {
+                cout << "  " << timeSlot.startTime << " - " << timeSlot.endTime << endl;
             }
         }
-    }
 
-
-    for (int i = 0; i < 7; ++i) {
-        cout << "Day " << i + 1 << ":\n";
-        for (int j = 0; j < names.size(); ++j) {
-            cout << "Name: " << names[j] << endl;
-            cout << "  Time Slot: ";
-            for (int k = 0; k < times[j][i].size(); ++k) {
-                cout<<times[j][i][k]<<" ";
-                
-            }
-            cout << endl;
+        cout << "Series: ";
+        for (const auto& series : favoriteSeries[family.first]) {
+            cout << series << " ";
         }
-        cout << endl;
+        cout << endl << endl;
     }
 
     return 0;
