@@ -72,7 +72,7 @@ vector<string> getIntersection(const vector<vector<string>>& schedule1, const ve
 
 int main() {
     // Open the file
-    ifstream file("latest.csv");
+    ifstream file("latest2.csv");
 
     // Check if file is opened successfully
     if (!file.is_open()) {
